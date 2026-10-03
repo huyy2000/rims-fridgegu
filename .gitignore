@@ -1,0 +1,28 @@
+# 构建产物
+build/
+build-host/
+__pycache__/
+*.pyc
+
+# 本地数据与密钥（绝不入库）
+.env
+*.db
+
+# Office 锁文件与临时文件
+~$*
+_.html
+
+# 编辑器/系统
+.vscode/
+.idea/
+Thumbs.db
+
+# 运行时产物（不入库）
+fridgepal/backend/uploads/
+fridgepal/backend/uvicorn.log
+fridgepal/backend/e2e_result.json
+fridgepal/backend/test_*.wav
+*.log
+dist/
+build/
+*.spec

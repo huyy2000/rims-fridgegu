@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>冰箱菇 · RIMS</title>
+<style>
+:root{
+  --brand:#E85513; --brand-soft:#FDEEE2; --bg:#FBF7F3; --ink:#3D2B1F;
+  --muted:#9A8577; --green:#3BA272; --orange:#E8833A; --red:#D64545; --line:#F0DCC8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.hwrap{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:28px;padding:14px 24px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:1px}
+.logo svg{width:30px;height:30px}
+nav{display:flex;gap:6px;flex:1}
+nav button{border:none;background:none;padding:10px 16px;font-size:15px;color:var(--muted);cursor:pointer;border-radius:8px;font-weight:600}
+nav button:hover{background:var(--brand-soft);color:var(--brand)}
+nav button.active{color:var(--brand);background:var(--brand-soft)}
+.status{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:#ccc}
+.dot.ok{background:#2EAD66}.dot.bad{background:var(--red)}
+main{max-width:1080px;margin:0 auto;padding:28px 24px 80px}
+section.tab{display:none}
+section.tab.active{display:block}
+h2{font-size:22px;margin-bottom:6px}
+.sub{color:var(--muted);font-size:14px;margin-bottom:20px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:760px){.grid3{grid-template-columns:1fr}}
+.mush{text-align:center;padding:10px}
+.mush svg{width:110px;height:110px}
+.mush h3{margin:8px 0 4px;font-size:16px}
+.mush p{font-size:13px;color:var(--muted);line-height:1.6}
+.chain{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+.chain span{background:var(--brand-soft);color:var(--brand);padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600}
+.chain i{color:var(--muted);font-style:normal}
+/* 语音记账 */
+.recwrap{display:flex;flex-direction:column;align-items:center;padding:10px 0 4px}
+.recbtn{width:120px;height:120px;border-radius:50%;border:none;background:var(--brand);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(232,85,19,.35);transition:.2s}
+.recbtn:hover{transform:scale(1.04)}
+.recbtn.rec{background:var(--red);animation:pulse 1.1s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(214,69,69,.45)}70%{box-shadow:0 0 0 26px rgba(214,69,69,0)}100%{box-shadow:0 0 0 0 rgba(214,69,69,0)}}
+.recbtn:disabled{background:#ccc;cursor:not-allowed;animation:none}
+.hint{margin-top:12px;color:var(--muted);font-size:14px;min-height:20px}
+.row{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}
+.row input[type=text]{flex:1;min-width:220px;border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:15px}
+.btn{border:none;border-radius:10px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;background:var(--brand);color:#fff}
+.btn.ghost{background:#fff;color:var(--brand);border:1px solid var(--brand)}
+.btn.small{padding:7px 14px;font-size:13px}
+.result{margin-top:18px}
+.kv{margin:6px 0;font-size:15px}
+.kv b{color:var(--brand)}
+.bubble{background:var(--brand-soft);border-radius:12px;padding:12px 16px;margin:10px 0;font-size:15px}
+/* 库存卡片表格 */
+.invtable{width:100%;border-collapse:collapse;margin-top:12px}
+.invtable th{font-size:13px;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line)}
+.invtable td{padding:10px;border-bottom:1px solid #F7EBDF;font-size:15px}
+.chip{display:inline-block;padding:3px 12px;border-radius:14px;color:#fff;font-size:13px}
+.chip.new{background:var(--green)}.chip.soon{background:var(--orange)}.chip.out{background:var(--red)}
+/* 记录 */
+.rec-item{border-bottom:1px solid #F7EBDF;padding:13px 4px}
+.rec-item .t{font-size:13px;color:var(--muted)}
+.rec-item .q{font-size:15px;margin:4px 0}
+.rec-item .a{font-size:14px;color:var(--brand)}
+audio{height:32px;margin-top:6px}
+/* 词库 */
+.vocab{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.vocab{grid-template-columns:1fr}}
+.vhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.vhead .idx{font-size:12px;color:var(--brand);font-weight:800;letter-spacing:1px}
+.vhead .cnt{color:var(--muted);font-size:13px}
+.vdesc{color:var(--muted);font-size:13px;margin:6px 0 14px}
+.pillrow{display:flex;flex-wrap:wrap;gap:10px}
+.pill{display:flex;align-items:center;gap:6px;background:var(--brand-soft);border-radius:22px;padding:7px 8px 7px 16px;font-size:14px}
+.pill input{width:52px;border:none;background:#fff;border-radius:12px;padding:3px 6px;font-size:12px;text-align:center}
+.pill .x{cursor:pointer;color:var(--brand);font-weight:800;padding:0 6px}
+.addr{display:flex;gap:8px;margin-top:14px}
+.addr input{flex:1;border:1.5px dashed #E3B79B;border-radius:10px;padding:9px 12px;font-size:14px;background:#fff}
+.addr input:focus{outline:none;border-color:var(--brand)}
+.rule{display:flex;align-items:center;gap:8px;background:var(--brand-soft);border-radius:12px;padding:9px 12px;margin-bottom:8px;font-size:14px}
+.rule b{color:var(--brand)}
+.rule .arrow{color:var(--muted)}
+.rule .x{margin-left:auto;cursor:pointer;color:var(--brand);font-weight:800}
+.empty{color:var(--muted);font-size:14px;padding:8px 0}
+.note{font-size:12px;color:var(--muted);margin-top:10px}
+img.cardpng{max-width:340px;border-radius:12px;box-shadow:0 6px 18px rgba(61,43,31,.12);margin-top:10px}
+/* 食材清单 */
+.statrow{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.stat{background:#fff;border:1px solid var(--line);border-radius:20px;padding:7px 16px;font-size:14px;font-weight:700;color:var(--ink)}
+.stat b{color:var(--brand)}
+.stat.warn b{color:var(--orange)}.stat.bad b{color:var(--red)}
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filters button{border:1px solid var(--line);background:#fff;border-radius:18px;padding:6px 14px;font-size:13px;cursor:pointer;color:var(--muted)}
+.filters button.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
+.addrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.addrow input{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;width:90px}
+.addrow input.grow{flex:1;min-width:140px}
+.group h4{margin:18px 0 8px;font-size:15px;color:var(--ink)}
+.itemrow{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.itemrow .nm{font-weight:700;font-size:15px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.itemrow .qt{font-size:14px;width:64px;text-align:right}
+.itemrow .ex{font-size:12px;color:var(--muted);width:110px;text-align:right}
+@media(max-width:600px){.itemrow .ex{display:none}.itemrow .qt{width:auto}}
+/* 窄屏页头不再竖排 */
+@media(max-width:760px){
+  .hwrap{gap:10px;padding:10px 14px}
+  .logo{font-size:17px;white-space:nowrap;flex-shrink:0}
+  nav{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  nav button{padding:8px 10px;font-size:13px;white-space:nowrap}
+  .status{font-size:11px;max-width:150px}
+  .status #dotText{display:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="logo">
+      <svg viewBox="0 0 64 64"><path d="M32 6C16 6 6 18 6 30c0 4 3 6 8 6h36c5 0 8-2 8-6C58 18 48 6 32 6z" fill="#E85513"/><rect x="26" y="36" width="12" height="20" rx="6" fill="#F6E7D8" stroke="#E3B79B"/></svg>
+      冰箱菇
+    </div>
+    <nav id="nav">
+      <button data-tab="home" class="active">概览</button>
+      <button data-tab="list">食材清单</button>
+      <button data-tab="voice">语音记账</button>
+      <button data-tab="history">对话记录</button>
+      <button data-tab="vocab">词库</button>
+    </nav>
+    <div class="status"><span class="dot" id="dot"></span><span id="dotText">连接中…</span></div>
+  </div>
+</header>
+
+<main>
+<!-- ============ 概览 ============ -->
+<section class="tab active" id="tab-home">
+  <h2>一套贴在冰箱上的"蘑菇家族"</h2>
+  <p class="sub">拍大蘑菇随手记 · 开门它主动问 · 拿走小蘑菇边放边记 —— AI 整理成库存，微信卡片交付。</p>
+
+  <div class="grid3">
+    <div class="card mush">
+      <svg viewBox="0 0 64 64"><path d="M32 6C16 6 6 18 6 30c0 4 3 6 8 6h36c5 0 8-2 8-6C58 18 48 6 32 6z" fill="#E85513"/><circle cx="20" cy="26" r="4" fill="#FFF3EA"/><circle cx="34" cy="18" r="3" fill="#FFF3EA"/><circle cx="44" cy="28" r="3.5" fill="#FFF3EA"/><rect x="24" y="36" width="16" height="22" rx="8" fill="#F6E7D8" stroke="#E3B79B"/></svg>
+      <h3>大蘑菇 · 基座</h3>
+      <p>贴在冰箱旁的无屏平板。大蘑菇按钮可以<b>拍</b>：拍一下开始录音，再拍结束。内置广域麦克风和喇叭——门开时它主动问"拿了什么？"，也是全系统的 Wi-Fi / 蓝牙网关。</p>
+    </div>
+    <div class="card mush">
+      <svg viewBox="0 0 64 64"><path d="M32 14C21 14 14 22 14 30c0 3 2 5 6 5h24c4 0 6-2 6-5 0-8-7-16-18-16z" fill="#E85513"/><rect x="27" y="35" width="10" height="17" rx="5" fill="#F6E7D8" stroke="#E3B79B"/><path d="M8 52h48" stroke="#E3B79B" stroke-linecap="round" stroke-dasharray="2 5"/></svg>
+      <h3>小蘑菇 · 录音豆</h3>
+      <p>平时吸附在基座上充电待机；<b>取下即录、放回即传</b>。近讲收音，边放边说，录音先存本地缓存，回传成功才清空——不怕撑爆。</p>
+    </div>
+    <div class="card mush">
+      <svg viewBox="0 0 64 64"><path d="M32 22c-8 0-13 6-13 12 0 2.4 1.6 4 4.6 4h16.8c3 0 4.6-1.6 4.6-4 0-6-5-12-13-12z" fill="#E85513"/><rect x="28.5" y="38" width="7" height="12" rx="3.5" fill="#F6E7D8" stroke="#E3B79B"/><text x="32" y="60" text-anchor="middle" font-size="8" fill="#9A8577">CR2450 · 3年</text></svg>
+      <h3>超小蘑菇 · 单件门磁</h3>
+      <p>贴在冰箱门和抽屉上的<b>单件</b>传感器（不是两件套门窗磁）。加速度唤醒+姿态判定感知开关，蓝牙上报，纽扣电池目标用 3 年。无线方案对标小米人体传感器 2S。</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:16px">一条云链路，三个录音入口</h3>
+    <div class="chain">
+      <span>拍键 / 门开 / 取下小蘑菇</span><i>→</i>
+      <span>录音</span><i>→</i>
+      <span>百炼 ASR（热词）</span><i>→</i>
+      <span>替换规则</span><i>→</i>
+      <span>DeepSeek 提取</span><i>→</i>
+      <span>库存更新</span><i>→</i>
+      <span>公众号表格卡片</span>
+    </div>
+    <p class="note">仲裁铁律：同一时刻只有一个录音+识别在跑，冲突时<b>小蘑菇 &gt; 大蘑菇</b>。无屏幕，一切结果走微信卡片。</p>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:16px">这个演示页是什么</h3>
+    <p style="font-size:14px;line-height:1.8;color:var(--muted);margin-top:6px">
+      这是冰箱菇的<b style="color:var(--ink)">展示软件</b>：介绍产品外观与系统，同时真实演示云端链路——
+      在「语音记账」页录一段"放了两盒牛奶"，就能看到 语音 → 识别 → 提取 → 库存卡片 的全过程。
+      硬件（基座/小蘑菇/超小蘑菇）的选型、BOM 与功耗设计见项目硬件文档。
+    </p>
+  </div>
+</section>
+
+<!-- ============ 食材清单 ============ -->
+<section class="tab" id="tab-list">
+  <h2>食材清单</h2>
+  <p class="sub">冰箱里现在有什么 —— 临期置顶，吃完的自动沉底，一句话就能记。</p>
+  <div class="card">
+    <div class="statrow">
+      <span class="stat">共 <b id="fTotal">0</b> 项</span>
+      <span class="stat warn">临期 <b id="fSoon">0</b></span>
+      <span class="stat bad">待补货 <b id="fOut">0</b></span>
+    </div>
+    <div class="addrow">
+      <input class="grow" type="text" id="fName" placeholder="食材名，如：牛奶">
+      <input type="text" id="fQty" placeholder="数量" value="1">
+      <input type="text" id="fUnit" placeholder="单位" value="盒">
+      <select id="fLoc" style="border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;background:#fff">
+        <option value="">位置(自动)</option>
+        <option value="冷藏">冷藏</option>
+        <option value="冷冻">冷冻</option>
+        <option value="调味">调味</option>
+        <option value="常温">常温</option>
+      </select>
+      <input type="text" id="fDays" placeholder="保质期/天，选填">
+      <button class="btn" id="fAdd">添加</button>
+    </div>
+    <div class="filters">
+      <button class="on" data-f="all">全部</button>
+      <button data-f="soon">临期</button>
+      <button data-f="out">待补货</button>
+    </div>
+    <div id="foodGroups"><div class="empty">加载中…</div></div>
+  </div>
+</section>
+
+<!-- ============ 语音记账 ============ -->
+<section class="tab" id="tab-voice">
+  <h2>语音记账</h2>
+  <p class="sub">按住说话，松手结束 —— 就像拍一下大蘑菇。（也可以直接打字）</p>
+
+  <div class="card">
+    <div class="recwrap">
+      <button class="recbtn" id="recBtn">● 按住<br>说话</button>
+      <div class="hint" id="recHint">浏览器第一次会请求麦克风权限</div>
+    </div>
+    <div class="row">
+      <input type="text" id="textInput" placeholder="…或者打字：放了两盒牛奶、一袋鸡蛋大概30个">
+      <button class="btn" id="textSend">发送</button>
+      <button class="btn ghost" id="askBtn">🔈 播放「拿了什么？」</button>
+    </div>
+  </div>
+
+  <div class="card result" id="resultCard" style="display:none">
+    <div class="kv"><b>识别原文</b>：<span id="rTranscript">—</span></div>
+    <div class="kv" id="rRulesWrap" style="display:none"><b>替换规则</b>：<span id="rRules">—</span></div>
+    <div class="bubble" id="rReply">—</div>
+    <h3 style="font-size:16px;margin-top:14px">库存卡片</h3>
+    <div id="cardWrap"></div>
+    <table class="invtable" id="invTable">
+      <thead><tr><th>物品</th><th>数量</th><th>状态</th><th>建议</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 对话记录 ============ -->
+<section class="tab" id="tab-history">
+  <h2>对话记录</h2>
+  <p class="sub">每一句「说进去」和「菇菇的回应」，新的在最上面。</p>
+  <div class="card" id="histList"><div class="empty">加载中…</div></div>
+</section>
+
+<!-- ============ 词库 ============ -->
+<section class="tab" id="tab-vocab">
+  <h2>词库</h2>
+  <p class="sub">让语音识别更容易听对你家的专有名词 —— 和 EasyInput App 的词库一个思路。</p>
+  <div class="vocab">
+    <div class="card">
+      <div class="vhead"><span class="idx">01 · 热词</span><span class="cnt" id="hwCnt">0 个</span></div>
+      <p class="vdesc">让语音识别更容易听对人名、食物名、品牌名等专有名词（同步到百炼热词表）。</p>
+      <div class="pillrow" id="hwList"></div>
+      <div class="addr"><input type="text" id="hwInput" placeholder="+ 添加（回车确认）"><button class="btn small" id="hwAdd">添加</button></div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn small ghost" id="hwImport">导入</button>
+        <button class="btn small ghost" id="hwExport">导出</button>
+        <button class="btn small" id="saveBtn">保存更改</button>
+        <input type="file" id="hwFile" accept=".json" style="display:none">
+      </div>
+    </div>
+    <div class="card">
+      <div class="vhead"><span class="idx">02 · 替换规则</span><span class="cnt" id="ruleCnt">0 条</span></div>
+      <p class="vdesc">识别完成后自动把左侧替换为右侧（比如把"屋木"替换成"呜噜"）。</p>
+      <div id="ruleList"></div>
+      <div class="addr"><input type="text" id="ruleFrom" placeholder="识别出…"><input type="text" id="ruleTo" placeholder="替换成…"><button class="btn small" id="ruleAdd">+ 添加规则</button></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+const API="/api/v1";
+let hw=[],rules=[];
+const $=s=>document.querySelector(s);
+
+/* ---------- 导航 ---------- */
+document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#nav button").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll("section.tab").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  $("#tab-"+b.dataset.tab).classList.add("active");
+  if(b.dataset.tab==="history")loadHistory();
+  if(b.dataset.tab==="vocab")loadVocab();
+  if(b.dataset.tab==="list")loadFoodList();
+});
+
+/* ---------- 健康状态 ---------- */
+fetch("/health").then(r=>r.json()).then(h=>{
+  $("#dot").classList.add("ok");
+  $("#dotText").textContent=`语音服务已连接 · LLM:${h.llm_mode} · ASR:${h.asr_mode}`;
+}).catch(()=>{ $("#dot").classList.add("bad"); $("#dotText").textContent="服务未连接"; });
+
+/* ---------- WAV 录音（16k 单声道 16bit） ---------- */
+let media=null,proc=null,src=null,chunks=[],recStart=0,recTimer=null;
+function resample(buf,from,to){
+  if(from===to)return buf;
+  const ratio=from/to,len=Math.floor(buf.length/ratio),out=new Float32Array(len);
+  for(let i=0;i<len;i++)out[i]=buf[Math.floor(i*ratio)];
+  return out;
+}
+function encodeWav(samples, rate){
+  const buffer=new ArrayBuffer(44+samples.length*2),v=new DataView(buffer);
+  const ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+  ws(0,"RIFF");v.setUint32(4,36+samples.length*2,true);ws(8,"WAVE");ws(12,"fmt ");
+  v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);
+  v.setUint16(34,16,true);ws(36,"data");v.setUint32(40,samples.length*2,true);
+  for(let i=0;i<samples.length;i++){const s=Math.max(-1,Math.min(1,samples[i]));v.setInt16(44+i*2,s<0?s*0x8000:s*0x7FFF,true);}
+  return new Blob([buffer],{type:"audio/wav"});
+}
+async function startRec(){
+  const stream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1,echoCancellation:true,noiseSuppression:true}});
+  media=stream;
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  src=ctx.createMediaStreamSource(stream);
+  proc=ctx.createScriptProcessor(4096,1,1);
+  chunks=[];
+  proc.onaudioprocess=e=>{
+    const raw=e.inputBuffer.getChannelData(0);
+    chunks.push(resample(raw,ctx.sampleRate,16000));
+  };
+  src.connect(proc);proc.connect(ctx.destination);
+}
+function stopRec(){
+  if(proc){proc.disconnect();src.disconnect();}
+  if(media)media.getTracks().forEach(t=>t.stop());
+  const rate=16000;
+  const total=chunks.reduce((a,c)=>a+c.length,0);
+  const merged=new Float32Array(total);
+  let off=0;chunks.forEach(c=>{merged.set(c,off);off+=c.length});
+  return encodeWav(merged, rate);
+}
+
+/* ---------- 录音按钮 ---------- */
+const btn=$("#recBtn"),hint=$("#recHint");
+let recording=false;
+btn.addEventListener("mousedown",begin);
+btn.addEventListener("touchstart",e=>{e.preventDefault();begin();},{passive:false});
+["mouseup","mouseleave","touchend"].forEach(ev=>btn.addEventListener(ev,end));
+async function begin(){
+  if(recording)return;
+  recording=true;btn.classList.add("rec");btn.innerHTML="● 松手<br>结束";hint.textContent="录音中…说：放了两盒牛奶";
+  try{await startRec();}catch(e){hint.textContent="麦克风不可用："+e.message;resetBtn();return;}
+}
+async function end(){
+  if(!recording)return;
+  const blob=stopRec();resetBtn();
+  if(blob.size<8000){hint.textContent="录音太短，长一点再试";return;}
+  hint.textContent="识别中…";
+  await sendAudio(blob);
+}
+function resetBtn(){recording=false;btn.classList.remove("rec");btn.innerHTML="● 按住<br>说话";}
+async function sendAudio(blob){
+  const fd=new FormData();
+  fd.append("audio",blob,"record.wav");fd.append("user_id","demo");fd.append("channel","web");
+  try{
+    const r=await fetch(API+"/recordings",{method:"POST",body:fd});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.detail||r.statusText);
+    showResult(data);hint.textContent="完成 ✅";
+  }catch(e){hint.textContent="出错："+e.message;}
+}
+$("#textSend").onclick=async()=>{
+  const t=$("#textInput").value.trim();if(!t)return;
+  hint.textContent="处理中…";
+  const fd=new FormData();fd.append("text",t);fd.append("user_id","demo");
+  try{
+    const r=await fetch(API+"/recordings",{method:"POST",body:fd});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.detail||r.statusText);
+    showResult(data);$("#textInput").value="";hint.textContent="完成 ✅";
+  }catch(e){hint.textContent="出错："+e.message;}
+};
+$("#askBtn").onclick=async()=>{
+  const fd=new FormData();fd.append("text","拿了什么？");
+  const r=await fetch(API+"/recordings/tts",{method:"POST",body:fd});
+  if(!r.ok){hint.textContent="TTS 失败";return;}
+  new Audio(URL.createObjectURL(await r.blob())).play();
+};
+
+/* ---------- 结果渲染 ---------- */
+async function showResult(data){
+  $("#resultCard").style.display="block";
+  $("#rTranscript").textContent=data.transcript||"—";
+  if(data.applied_rules&&data.applied_rules.length){
+    $("#rRulesWrap").style.display="block";
+    $("#rRules").textContent=data.applied_rules.map(r=>`${r.from}→${r.to}`).join("，");
+  }else $("#rRulesWrap").style.display="none";
+  $("#rReply").textContent=data.reply||"—";
+  $("#cardWrap").innerHTML=`<img class="cardpng" src="${API}/recordings/card?t=${Date.now()}" alt="库存卡片">`;
+  await loadInventory();
+}
+function statusOf(x){
+  const now=new Date();
+  if(x.quantity<=0)return["补货","已吃完，该买了","out"];
+  if(x.expire_at){
+    const days=Math.floor((new Date(x.expire_at)-now)/864e5);
+    const dstr=new Date(x.expire_at).toLocaleDateString("zh-CN",{month:"2-digit",day:"2-digit"});
+    if(days<=3)return[days>0?days+"天":"今天",dstr+"前吃掉","soon"];
+    return["新鲜",dstr+"到期","new"];
+  }
+  return["新鲜","状态不错","new"];
+}
+
+async function loadInventory(){
+  const r=await fetch(API+"/inventory?user_id=demo");
+  const rows=await r.json();
+  const tb=$("#invTable tbody");tb.innerHTML="";
+  const stOf=x=>statusOf(x);
+  const wOf=s=>s==="补货"?2:(s==="新鲜"?1:0);
+  rows.sort((a,b)=>{
+    const wa=wOf(stOf(a)[0]),wb=wOf(stOf(b)[0]);
+    if(wa!==wb)return wa-wb;
+    return (new Date(a.expire_at||"2999-12-31"))-(new Date(b.expire_at||"2999-12-31"));
+  });
+  rows.slice(0,10).forEach(x=>{
+    const[s,adv,c]=stOf(x);
+    tb.insertAdjacentHTML("beforeend",
+      `<tr><td>${x.item_name}</td><td>${x.quantity}${x.unit}</td><td><span class="chip ${c}">${s}</span></td><td style="color:var(--muted)">${adv}</td></tr>`);
+  });
+  if(!rows.length)tb.innerHTML=`<tr><td colspan="4" style="color:var(--muted)">冰箱里空空如也，快说一句「放了两盒牛奶」吧</td></tr>`;
+}
+
+/* ---------- 食材清单 ---------- */
+let foodFilter="all";
+async function loadFoodList(){
+  const r=await fetch(API+"/inventory?user_id=demo");
+  const rows=await r.json();
+  const info=rows.map(x=>({x,s:statusOf(x)}));
+  $("#fTotal").textContent=rows.length;
+  $("#fSoon").textContent=info.filter(i=>i.s[2]==="soon").length;
+  $("#fOut").textContent=info.filter(i=>i.s[2]==="out").length;
+  const shown=info.filter(i=>foodFilter==="all"||i.s[2]===foodFilter);
+  const wOf=s=>s==="补货"?2:(s==="新鲜"?1:0);
+  shown.sort((a,b)=>{
+    const wa=wOf(a.s[0]),wb=wOf(b.s[0]);
+    if(wa!==wb)return wa-wb;
+    return (new Date(a.x.expire_at||"2999-12-31"))-(new Date(b.x.expire_at||"2999-12-31"));
+  });
+  const groups={};
+  shown.forEach(i=>{const loc=i.x.location||"其他";(groups[loc]=groups[loc]||[]).push(i);});
+  const order=["冷藏","冷冻","调味","其他"].filter(k=>groups[k])
+    .concat(Object.keys(groups).filter(k=>!["冷藏","冷冻","调味","其他"].includes(k)));
+  const el=$("#foodGroups");
+  if(!shown.length){
+    el.innerHTML=`<div class="empty">${foodFilter==="all"?"冰箱里空空如也，快说一句「放了两盒牛奶」吧":"这一类暂时没有"}</div>`;
+    return;
+  }
+  el.innerHTML=order.map(g=>`
+    <div class="group"><h4>${g} · ${groups[g].length} 项</h4>
+    ${groups[g].map(({x,s})=>`
+      <div class="itemrow">
+        <span class="nm">${x.item_name}</span>
+        <span class="qt">${x.quantity}${x.unit}</span>
+        <span class="chip ${s[2]}">${s[0]}</span>
+        <span class="ex">${s[1]}</span>
+        <button class="btn small ghost" onclick="clearItem('${x.id}')">清掉</button>
+      </div>`).join("")}
+    </div>`).join("");
+}
+async function clearItem(id){
+  await fetch(API+"/inventory/"+id+"?user_id=demo",{method:"DELETE"});
+  loadFoodList();
+}
+$("#fAdd").onclick=async()=>{
+  const name=$("#fName").value.trim();if(!name)return;
+  const body={item_name:name,quantity:+$("#fQty").value||1,unit:$("#fUnit").value.trim()||"个"};
+  const loc=$("#fLoc").value;if(loc)body.location=loc;
+  const d=parseFloat($("#fDays").value);if(d>0)body.expire_days=d;
+  await fetch(API+"/inventory?user_id=demo",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  $("#fName").value="";$("#fDays").value="";loadFoodList();
+};
+document.querySelectorAll(".filters button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".filters button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");foodFilter=b.dataset.f;loadFoodList();
+});
+
+/* ---------- 对话记录 ---------- */
+async function loadHistory(){
+  const r=await fetch(API+"/recordings?limit=50");
+  const rows=await r.json();
+  const el=$("#histList");
+  if(!rows.length){el.innerHTML=`<div class="empty">还没有记录，去「语音记账」说一句吧</div>`;return;}
+  el.innerHTML=rows.map(x=>`
+    <div class="rec-item">
+      <div class="t">${new Date(x.created_at+"Z").toLocaleString("zh-CN")} · ${x.channel} · ${x.source==="audio"?"🎤":"⌨️"}</div>
+      <div class="q">${x.final_text||x.transcript||"(空)"}</div>
+      <div class="a">菇菇：${x.reply_text||""}</div>
+      ${x.audio_url?`<audio controls src="/${x.audio_url}"></audio>`:""}
+    </div>`).join("");
+}
+
+/* ---------- 词库 ---------- */
+async function loadVocab(){
+  const r=await fetch(API+"/vocab?user_id=demo");
+  const d=await r.json();
+  hw=d.hotwords||[];rules=d.rules||[];
+  renderVocab();
+}
+function renderVocab(){
+  $("#hwCnt").textContent=hw.length+" 个";
+  $("#ruleCnt").textContent=rules.length+" 条";
+  $("#hwList").innerHTML=hw.length?hw.map((h,i)=>
+    `<span class="pill">${h.phrase}<input type="number" min="1" max="10" value="${h.weight}" onchange="hw[${i}].weight=+this.value" title="权重 1-10"><span class="x" onclick="hw.splice(${i},1);renderVocab()">✕</span></span>`).join("")
+    :`<div class="empty">暂无热词，点击下方添加</div>`;
+  $("#ruleList").innerHTML=rules.length?rules.map((r,i)=>
+    `<div class="rule"><span>识别出 <b>${r.from_text}</b></span><span class="arrow">→</span><span>替换为 <b>${r.to_text}</b></span><span class="x" onclick="rules.splice(${i},1);renderVocab()">✕</span></div>`).join("")
+    :`<div class="empty">暂无替换规则，点击下方添加</div>`;
+}
+function addHw(){
+  const v=$("#hwInput").value.trim();if(!v)return;
+  if(hw.some(h=>h.phrase===v)){hint2(v+" 已存在");return;}
+  hw.push({phrase:v,weight:3});$("#hwInput").value="";renderVocab();
+}
+function addRule(){
+  const f=$("#ruleFrom").value.trim(),t=$("#ruleTo").value.trim();
+  if(!f||!t)return;
+  rules.push({from_text:f,to_text:t});
+  $("#ruleFrom").value="";$("#ruleTo").value="";renderVocab();
+}
+function hint2(m){console.log(m)}
+$("#hwAdd").onclick=addHw;
+$("#hwInput").addEventListener("keydown",e=>{if(e.key==="Enter")addHw();});
+$("#ruleAdd").onclick=addRule;
+$("#saveBtn").onclick=async()=>{
+  const r=await fetch(API+"/vocab?user_id=demo",{method:"PUT",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({hotwords:hw,rules})});
+  alert(r.ok?"已保存 ✅（热词将在下一次识别时生效）":"保存失败");
+};
+$("#hwExport").onclick=()=>{
+  const blob=new Blob([JSON.stringify({hotwords:hw,rules},null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="fridgegu-vocab.json";a.click();
+};
+$("#hwImport").onclick=()=>$("#hwFile").click();
+$("#hwFile").onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{const d=JSON.parse(await f.text());hw=d.hotwords||[];rules=d.rules||[];renderVocab();}
+  catch{alert("文件格式不对");}
+  e.target.value="";
+};
+loadInventory();
+</script>
+</body>
+</html>

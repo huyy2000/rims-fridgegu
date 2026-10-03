@@ -1,0 +1,9 @@
+menu "RIMS Bean"
+
+    config REC_VAD_RMS
+        int "VAD 静音检测 RMS 阈值（16bit 满量程 32768）"
+        default 500
+        help
+            高于此值视为有人说话。环境吵/说话小声可调。
+
+endmenu
